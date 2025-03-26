@@ -100,7 +100,27 @@ async function processAnthropic(apiKey: string, model: string, input: string, te
     temperature,
   })
 
-  return response.content[0]?.text || ''
+  // Handle various content block types from Anthropic response
+  if (!response.content || response.content.length === 0) {
+    return ''
+  }
+  
+  // Gabungkan semua blok konten teks
+  let result = ''
+  
+  for (const block of response.content) {
+    if (block.type === 'text' && 'text' in block) {
+      result += block.text
+    } else if ('text' in block) {
+      // Fallback untuk format lama
+      result += block.text
+    } else {
+      // Log jenis blok yang tidak dikenali untuk debugging
+      console.log('Blok konten tidak dikenali:', block.type)
+    }
+  }
+  
+  return result || JSON.stringify(response.content)
 }
 
 // Process request with Google AI
